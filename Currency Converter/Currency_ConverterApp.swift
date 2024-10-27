@@ -9,13 +9,12 @@ import SwiftUI
 
 @main
 struct CurrencyConverterApp: App {
-    @StateObject var languageSettings = LanguageSettings()
+    @StateObject var languageSettings = SettingsViewModel()
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CurrencyConverter()
                 .environmentObject(languageSettings)
-                // .environment(\.locale, .init(identifier: languageSettings.selectedLanguage))
         }
     }
 }
