@@ -1,0 +1,33 @@
+/* 
+  Localizable.strings
+  Currency Converter
+
+  Created by ducvuong on 27/10/24.
+  
+*/
+
+/* ContentView */
+"enter_amount" = "Enter amount to convert en";
+"amount" = "Amount";
+"select_currencies" = "Select currencies";
+"from" = "From";
+"to" = "To";
+"result" = "Result";
+"convert" = "Convert";
+"currency_convert" = "Currency Converter";
+"rrror" = "Error";
+"please_enter_a_valid_amount." = "Please enter a valid amount.";
+"unable_to_fetch_exchange_rates._please_try_again_later." = "Unable to fetch exchange rates. Please try again later.";
+"invalid_amount" = "Invalid amount";
+
+/* SettingsView */
+"settings" = "Settings";
+"select_language" = "Select Language";
+"close" = "Close";
+
+/* CurrencyPickerView */
+"search_currency" = "Search Currency";
+"select_currency" = "Select Currency";
+"close" = "Close";
+
+"language" = "language";
