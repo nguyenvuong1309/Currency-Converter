@@ -46,14 +46,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ENV_GITHUB_TOKEN }}
         run: |
-          # Kiểm tra xem sự kiện có phải là pull_request không
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BRANCH_NAME="${{ github.head_ref }}"
-          else
-            # Khi kích hoạt thủ công, sử dụng nhánh mặc định
-            BRANCH_NAME="${{ github.ref#refs/heads/ }}"
-          fi
-
-          echo "Pushing to branch: $BRANCH_NAME"
-
-          git push https://github-actions[bot]:${{ secrets.ENV_GITHUB_TOKEN }}@github.com/nguyenvuong1309/Currency-Converter.gitHEAD:${BRANCH_NAME}
+          git push https://github-actions[bot]:${{ secrets.ENV_GITHUB_TOKEN }}@github.com/nguyenvuong1309/Currency-Converter.gitHEAD:feature/auto_translate
