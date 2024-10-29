@@ -5,7 +5,7 @@ permissions:
 on:
   pull_request:
     paths:
-      - "vi.lproj/Localizable.strings" # Trigger khi Localizable.strings thay đổi trong vi.lproj
+      - "Currency-Converter/vi.lproj/Localizable.strings" # Trigger khi Localizable.strings thay đổi trong vi.lproj
   workflow_dispatch: # Cho phép kích hoạt thủ công
 
 jobs:
