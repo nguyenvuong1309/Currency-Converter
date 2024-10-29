@@ -4,8 +4,8 @@ from deep_translator import GoogleTranslator
 
 # Cấu hình
 BASE_DIR = os.path.dirname(__file__)
-INPUT_FILE = os.path.join(BASE_DIR, 'vi.lproj/Localizable.strings')
-OUTPUT_FILE = os.path.join(BASE_DIR, 'en.lproj/Localizable.strings')
+INPUT_FILE = os.path.join(BASE_DIR, 'Currency Converter/vi.lproj/Localizable.strings')
+OUTPUT_FILE = os.path.join(BASE_DIR, 'Currency Converter/en.lproj/Localizable.strings')
 
 # Khởi tạo dịch giả
 translator = GoogleTranslator(source='vi', target='en')
