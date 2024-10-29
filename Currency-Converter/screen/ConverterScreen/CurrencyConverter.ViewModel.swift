@@ -88,7 +88,7 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
     // Function to fetch exchange rates from the API
     func fetchExchangeRates(completion: @escaping (Bool) -> Void) {
         // changeState(.loading)
-        let urlString = "https://api.exchangeratesapi.io/v1/latest?access_key=16d0d19b8e54a36da18e17af6b13c396"
+        let urlString = "https://api.exchangeratesapi.io/v1/latest?access_key=f36d7950db4e3ded0670571772b404ed-"
         guard let url = URL(string: urlString) else {
             completion(false)
             return
