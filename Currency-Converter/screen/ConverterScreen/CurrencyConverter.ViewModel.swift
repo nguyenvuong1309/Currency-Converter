@@ -45,11 +45,11 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
             if success {
                 if let fromRate = self.exchangeRates[self.fromCurrency], let toRate = self.exchangeRates[self.toCurrency] {
                 } else {
-                    self.errorMessage = NSLocalizedString("cannot_fetch_rates", comment: "")
+                    self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
                     self.showError = true
                 }
             } else {
-                self.errorMessage = NSLocalizedString("cannot_fetch_rates", comment: "")
+                self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
                 self.showError = true
             }
         }
@@ -75,11 +75,11 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
                     let baseAmount = amount / fromRate
                     self.convertedAmount = baseAmount * toRate
                 } else {
-                    self.errorMessage = NSLocalizedString("cannot_fetch_rates", comment: "")
+                    self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
                     self.showError = true
                 }
             } else {
-                self.errorMessage = NSLocalizedString("cannot_fetch_rates", comment: "")
+                self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
                 self.showError = true
             }
         }
