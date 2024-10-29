@@ -38,7 +38,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Update English translations" || echo "No changes to commit"
-          git push
+          git push https://github-actions[bot]:${{ secrets.ENV_GITHUB_TOKEN }}@github.com/nguyenvuong1309/Currency-Converter.git
         env:
           # Sử dụng GITHUB_TOKEN để xác thực push
           GITHUB_TOKEN: ${{ secrets.ENV_GITHUB_TOKEN }}
