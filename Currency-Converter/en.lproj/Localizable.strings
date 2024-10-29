@@ -15,3 +15,6 @@
 "close" = "Close";
 
 
+"search_currency" = "Search for currency";
+"select_currency" = "Select currency";
+"language" = "Language";
