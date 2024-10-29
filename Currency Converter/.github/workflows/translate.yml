@@ -1,10 +1,10 @@
 name: Translate Vietnamese to English
 
 on:
-  push:
+  pull_request:
     paths:
-      - "vi.lang" # Kích hoạt khi có thay đổi trong vi.lang
-  workflow_dispatch: # Cho phép kích hoạt thủ công
+      - "vi.lproj/Localizable.strings" # Trigger when Localizable.strings changes in vi.lproj
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   translate:
