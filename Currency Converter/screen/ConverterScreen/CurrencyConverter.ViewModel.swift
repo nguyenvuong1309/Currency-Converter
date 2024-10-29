@@ -4,7 +4,7 @@ import Foundation
 import SwiftUI
 import Combine
 
-class CurrencyConverterViewModel: ObservableObject {
+class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
     // Published properties to update the view
     @Published var inputAmount: String = ""
     @Published var fromCurrency: String = "EUR"
@@ -18,6 +18,8 @@ class CurrencyConverterViewModel: ObservableObject {
     @AppStorage("selectedLanguage") var selectedLanguage: String = Locale.current.language.languageCode?.identifier ?? "en"
     
     @Published var exchangeRates: [String: Double] = [:]
+
+    var showingAlert: Bool = false
     
     let currencies = ["EUR", "USD", "JPY", "GBP", "AUD", "CAD", "CHF", "CNY", "HKD", "INR", "SGD", "BTC"]
     
@@ -30,9 +32,31 @@ class CurrencyConverterViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
-    init() {
-        // Optionally, fetch exchange rates on initialization
-        // fetchExchangeRates()
+//    init() {
+//        // Optionally, fetch exchange rates on initialization
+//        // fetchExchangeRates()
+//    }
+
+    func serviceInitialize() {
+        fetchExchangeRates { [weak self] success in
+            guard let self = self else { return }
+            self.isLoading = false
+            self.changeState(.finished)
+            if success {
+                if let fromRate = self.exchangeRates[self.fromCurrency], let toRate = self.exchangeRates[self.toCurrency] {
+                } else {
+                    self.errorMessage = NSLocalizedString("cannot_fetch_rates", comment: "")
+                    self.showError = true
+                }
+            } else {
+                self.errorMessage = NSLocalizedString("cannot_fetch_rates", comment: "")
+                self.showError = true
+            }
+        }
+    }
+
+    func changeStateToEmpty() {
+        changeState(.empty)
     }
     
     // Function to perform currency conversion
@@ -63,6 +87,7 @@ class CurrencyConverterViewModel: ObservableObject {
     
     // Function to fetch exchange rates from the API
     func fetchExchangeRates(completion: @escaping (Bool) -> Void) {
+        // changeState(.loading)
         let urlString = "https://api.exchangeratesapi.io/v1/latest?access_key=16d0d19b8e54a36da18e17af6b13c396"
         guard let url = URL(string: urlString) else {
             completion(false)
@@ -78,8 +103,10 @@ class CurrencyConverterViewModel: ObservableObject {
             .sink { completionStatus in
                 switch completionStatus {
                 case .finished:
+                    self.changeState(.finished)
                     break
                 case .failure(let error):
+                    self.showingAlert.toggle()
                     print("Network or decoding error: \(error.localizedDescription)")
                     completion(false)
                 }

@@ -10,7 +10,15 @@ struct CurrencyConverter: View {
     @State private var isToCurrencyPickerPresented = false
     
     var body: some View {
-        NavigationView {
+        baseView()
+    }
+
+    
+    @ViewBuilder
+    private func baseView() -> some View {
+        switch viewModel.states {
+        case .finished:
+            NavigationView {
             Form {
                 // Input Amount Section
                 Section(header: Text("enter_amount".localised(using: languageSettings.selectedLanguage))) {
@@ -81,6 +89,31 @@ struct CurrencyConverter: View {
             }
         }
         .preferredColorScheme(viewModel.isDarkMode ? .dark : .light)
+        case .loading:
+            ProgressView("Loading")
+        case .error(error: let error):
+            CustomStateView(image: "exclamationmark.transmission",
+                            description: "Something get wrong !",
+                            tintColor: .red)
+                .alert(isPresented: $viewModel.showingAlert) {
+                    Alert(title: Text("Error Message"),
+                          message: Text(error),
+                          dismissButton: Alert.Button.default(
+                            Text("Ok"), action: {
+                                viewModel.changeStateToEmpty()
+                            }
+                          ))
+                }
+        case .ready:
+            ProgressView()
+                .onAppear {
+                    viewModel.serviceInitialize()
+                }
+        case .empty:
+            CustomStateView(image: "newspaper",
+                            description: "There is no data :(",
+                            tintColor: .indigo)
+        }
     }
 }
 
