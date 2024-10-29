@@ -13,12 +13,6 @@
 "settings" = "Settings";
 "select_language" = "Select Language";
 "close" = "Close";
-"search_currency" = "Search Currency";
-"select_currency" = "Select Currency";
-"close" = "Close";
+"search_currency" = "Search for currency";
+"select_currency" = "Select currency";
 "language" = "Language";
-"hello" = "the tree";
-"hi" = "Hello";
-"hehe" = "morning";
-"money" = "money";
-"money" = "money";
