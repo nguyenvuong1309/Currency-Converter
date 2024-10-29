@@ -5,7 +5,7 @@ permissions:
 on:
   pull_request:
     paths:
-      - "vi.lproj/Localizable.strings" # Trigger khi Localizable.strings thay đổi trong vi.lproj
+      - "Currency-Converter/vi.lproj/Localizable.strings" # Kích hoạt khi Localizable.strings thay đổi trong vi.lproj
   workflow_dispatch: # Cho phép kích hoạt thủ công
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          persist-credentials: true
+          persist-credentials: true # Tắt sử dụng token tự động
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -32,13 +32,28 @@ jobs:
         run: |
           python Currency-Converter/translate.py
 
-      - name: Commit and push changes
+      - name: Configure Git
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes
+        run: |
           git add .
           git commit -m "Update English translations" || echo "No changes to commit"
-          git push https://github-actions[bot]:${{ secrets.ENV_GITHUB_TOKEN }}@github.com/nguyenvuong1309/Currency-Converter.git
+
+      - name: Push changes
         env:
-          # Sử dụng GITHUB_TOKEN để xác thực push
           GITHUB_TOKEN: ${{ secrets.ENV_GITHUB_TOKEN }}
+        run: |
+          # Kiểm tra xem sự kiện có phải là pull_request không
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+          else
+            # Khi kích hoạt thủ công, sử dụng nhánh mặc định
+            BRANCH_NAME="${{ github.ref#refs/heads/ }}"
+          fi
+
+          echo "Pushing to branch: $BRANCH_NAME"
+
+          git push https://github-actions[bot]:${{ secrets.ENV_GITHUB_TOKEN }}@github.com/nguyenvuong1309/Currency-Converter.gitHEAD:${BRANCH_NAME}
