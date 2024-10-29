@@ -46,4 +46,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ENV_GITHUB_TOKEN }}
         run: |
-          git push https://github-actions[bot]:${{ secrets.ENV_GITHUB_TOKEN }}@github.com/nguyenvuong1309/Currency-Converter.gitHEAD:feature/auto_translate
+          git push https://github-actions[bot]:${{ secrets.ENV_GITHUB_TOKEN }}@github.com/nguyenvuong1309/Currency-Converter.git HEAD:feature/auto_translate
