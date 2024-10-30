@@ -16,3 +16,7 @@
 "search_currency" = "Search for currency";
 "select_currency" = "Select currency";
 "language" = "Language";
+"dark_mode" = "Dark mode";
+"appearance" = "Appearance";
+"cannot_fetch_exchange_rates" = "Cannot fetch exchange rates";
+"search_language" = "Search language";

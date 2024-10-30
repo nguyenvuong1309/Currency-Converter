@@ -15,9 +15,9 @@ final class MockHttpClient: NewsServiceable, Mockable {
         self.filename = filename
     }
     
-    func fetchExchangeRates() async -> Result<Currency_Converter.ServiceModel, Currency_Converter.RequestError> {
+    func fetchExchangeRates() async -> Result<Currency_Converter.ExchangeRatesResponse, Currency_Converter.RequestError> {
         return await loadJson(filename: filename,
                               extensionType: .json,
-                              responseModel: Currency_Converter.ServiceModel.self)
+                              responseModel: Currency_Converter.ExchangeRatesResponse.self)
     }
 }

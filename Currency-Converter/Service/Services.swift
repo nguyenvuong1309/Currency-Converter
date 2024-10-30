@@ -9,12 +9,12 @@ import Foundation
 import SwiftUI
 
 protocol NewsServiceable {
-    func fetchExchangeRates() async -> Result<ServiceModel, RequestError>
+    func fetchExchangeRates() async -> Result<ExchangeRatesResponse, RequestError>
 }
 
 struct NewsService: HTTPClient, NewsServiceable {
     
-    func fetchExchangeRates() async -> Result<ServiceModel, RequestError> {
-        return await sendRequest(endpoint: NewsEndpoint.exchangeRates, responseModel: ServiceModel.self)
+    func fetchExchangeRates() async -> Result<ExchangeRatesResponse, RequestError> {
+        return await sendRequest(endpoint: NewsEndpoint.exchangeRates, responseModel: ExchangeRatesResponse.self)
     }
 }

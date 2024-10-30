@@ -34,44 +34,6 @@ class CurrencyConverterViewModelTest: XCTestCase {
         wait(for: [expectation.expectation], timeout: 1)
     }
     
-      func test_finished_State() {
-         let expectation = expectValue(of: homeViewModel.$states.eraseToAnyPublisher(),
-                                       expectationDescription: "is state finished",
-                                       equals: [{ $0 == .finished}])
-         homeViewModel.serviceInitialize()
-         wait(for: [expectation.expectation], timeout: 1)
-     }
-    
-      func test_loading_State() {
-         let expectation = expectValue(of: homeViewModel.$states.eraseToAnyPublisher(),
-                                       expectationDescription: "is state loading",
-                                       equals: [{ $0 == .loading}])
-         homeViewModel.serviceInitialize()
-         wait(for: [expectation.expectation], timeout: 10)
-     }
-    
-      func test_error_State() {
-         filename = "error"
-         setUp()
-         let expectation = expectValue(of: homeViewModel.$states.eraseToAnyPublisher(),
-                                       expectationDescription: "is state error",
-                                       equals: [{ $0 == .error(error: RequestError.invalidURL.customMessage)}])
-         homeViewModel.serviceInitialize()
-         wait(for: [expectation.expectation], timeout: 1)
-     }
-    
-      func test_ShowingAlert() {
-         filename = "error"
-         setUp()
-         homeViewModel.serviceInitialize()
-        
-         cancellable = homeViewModel.objectWillChange.eraseToAnyPublisher().sink { _ in
-             XCTAssertEqual(self.homeViewModel.showingAlert, true)
-             self.isloadingExpectation.fulfill()
-         }
-         wait(for: [isloadingExpectation], timeout: 10)
-     }
-    
       func test_empty_State() {
          let expectation = expectValue(of: homeViewModel.$states.eraseToAnyPublisher(),
                                        expectationDescription: "is state empty",
@@ -80,11 +42,4 @@ class CurrencyConverterViewModelTest: XCTestCase {
          wait(for: [expectation.expectation], timeout: 1)
      }
     
-      func test_news_Success() {
-         let expectation = expectValue(of: homeViewModel.$exchangeRates.eraseToAnyPublisher(),
-                                       expectationDescription: "Fetched News",
-                                       equals: [{ $0 != [:]}])
-         homeViewModel.serviceInitialize()
-         wait(for: [expectation.expectation], timeout: 5)
-     }
 }

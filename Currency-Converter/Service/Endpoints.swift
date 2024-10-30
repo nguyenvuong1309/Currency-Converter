@@ -63,7 +63,7 @@ extension NewsEndpoint: Endpoint {
     }
 
     var header: [String : String]? {
-        let accessToken = "120029318d94458c867a745671a02d09"
+        let accessToken = "f36d7950db4e3ded0670571772b404ed"
         
         switch self {
         case .exchangeRates:

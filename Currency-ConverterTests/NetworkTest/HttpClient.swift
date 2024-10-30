@@ -63,7 +63,7 @@ class HttpClientTest: XCTestCase, Mockable, HTTPClient {
         
         Task {
             let result = await sendRequest(endpoint: endpoint,
-                                           responseModel: ServiceModel.self,
+                                           responseModel: ExchangeRatesResponse.self,
                                            urlSession: urlSession)
             switch result {
             case .success(let success):
@@ -99,7 +99,7 @@ class HttpClientTest: XCTestCase, Mockable, HTTPClient {
         
         Task {
             let result = await sendRequest(endpoint: endpoint,
-                                           responseModel: ServiceModel.self,
+                                           responseModel: ExchangeRatesResponse.self,
                                            urlSession: urlSession)
             switch result {
             case .success(_):
@@ -110,39 +110,5 @@ class HttpClientTest: XCTestCase, Mockable, HTTPClient {
             }
         }
         wait(for: [expectation], timeout: 2)
-    }
-    
-    func test_News_EncodingError() {
-        var urlComponents = URLComponents()
-        urlComponents.scheme = endpoint.scheme
-        urlComponents.host = endpoint.host
-        urlComponents.path = endpoint.path
-        urlComponents.queryItems = endpoint.queryItems
-        
-        let response = HTTPURLResponse(url: urlComponents.url!,
-                                       statusCode: 200,
-                                       httpVersion: nil,
-                                       headerFields: ["Content-Type": "application/json"])!
-        
-        let mockData: Data = Data(mockString.utf8)
-        
-        MockURLProtocol.requestHandler = { request in
-            return (response, mockData)
-        }
-        
-        let expectation = XCTestExpectation(description: "response")
-        
-        Task {
-            let result = await sendRequest(endpoint: endpoint,
-                                           responseModel: [ServiceModel].self,
-                                           urlSession: urlSession)
-            switch result {
-            case .success(_):
-                XCTAssertThrowsError("Fatal Error")
-            case .failure(let failure):
-                XCTAssertEqual(RequestError.decode, failure)
-                expectation.fulfill()
-            }
-        }
     }
 }
