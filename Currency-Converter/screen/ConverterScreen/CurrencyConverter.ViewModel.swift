@@ -1,11 +1,9 @@
-// CurrencyViewModel.swift
-
 import Foundation
-import SwiftUI
 import Combine
+import SwiftUI
 
-class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
-    // Published properties to update the view
+class CurrencyConverterViewModel: BaseViewModel<CurrencyConverterStates> {
+    // Published properties
     @Published var inputAmount: String = ""
     @Published var fromCurrency: String = "EUR"
     @Published var toCurrency: String = "USD"
@@ -13,6 +11,8 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
     @Published var isLoading: Bool = false
     @Published var showError: Bool = false
     @Published var errorMessage: String = ""
+    @Published var isFromCurrencyPickerPresented: Bool = false
+    @Published var isToCurrencyPickerPresented: Bool = false
     
     @AppStorage("isDarkMode") var isDarkMode: Bool = false
     @AppStorage("selectedLanguage") var selectedLanguage: String = Locale.current.language.languageCode?.identifier ?? "en"
@@ -22,6 +22,9 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
     var showingAlert: Bool = false
     
     
+    private var cancellables = Set<AnyCancellable>()
+    
+
     let currencies = ["AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", 
     "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", "BSD", "BTC", "BTN", "BWP", "BYN", "BYR", "BZD", "CAD", 
     "CDF", "CHF", "CLF", "CLP", "CNY", "CNH", "COP", "CRC", "CUC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", 
@@ -207,26 +210,13 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
     "ZMW": "🇿🇲", // Zambia
     "ZWL": "🇿🇼", // Zimbabwe
 ]
-    
-    private var cancellables = Set<AnyCancellable>()
-    
-//    init() {
-//        // Optionally, fetch exchange rates on initialization
-//        // fetchExchangeRates()
-//    }
-
-    func serviceInitialize() {
+    // Initialize the service and fetch exchange rates
+    func initializeService() {
         fetchExchangeRates { [weak self] success in
             guard let self = self else { return }
             self.isLoading = false
             self.changeState(.finished)
-            if success {
-                if let fromRate = self.exchangeRates[self.fromCurrency], let toRate = self.exchangeRates[self.toCurrency] {
-                } else {
-                    self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
-                    self.showError = true
-                }
-            } else {
+            if !success {
                 self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
                 self.showError = true
             }
@@ -248,14 +238,8 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
         fetchExchangeRates { [weak self] success in
             guard let self = self else { return }
             self.isLoading = false
-            if success {
-                if let fromRate = self.exchangeRates[self.fromCurrency], let toRate = self.exchangeRates[self.toCurrency] {
-                    let baseAmount = amount / fromRate
-                    self.convertedAmount = baseAmount * toRate
-                } else {
-                    self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
-                    self.showError = true
-                }
+            if success, let fromRate = self.exchangeRates[self.fromCurrency], let toRate = self.exchangeRates[self.toCurrency] {
+                self.convertedAmount = (amount / fromRate) * toRate
             } else {
                 self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
                 self.showError = true
@@ -263,36 +247,34 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
         }
     }
     
-    // Function to fetch exchange rates from the API
-    func fetchExchangeRates(completion: @escaping (Bool) -> Void) {
-        let urlString = "https://api.exchangeratesapi.io/v1/latest?access_key=f36d7950db4e3ded0670571772b404ed"
+    // Fetch exchange rates with enhanced error handling
+    private func fetchExchangeRates(completion: @escaping (Bool) -> Void) {
+        // let urlString = "https://api.exchangeratesapi.io/v1/latest?access_key=f36d7950db4e3ded0670571772b404ed"
+        // let urlString = Endpoints.exchangeRates.url
+        let urlString = "http://localhost:3000"
         guard let url = URL(string: urlString) else {
             completion(false)
             return
         }
 
         URLSession.shared.dataTaskPublisher(for: url)
-            .tryMap { data, response -> ExchangeRatesResponse in
+            .tryMap { data, response in
                 let decoder = JSONDecoder()
                 return try decoder.decode(ExchangeRatesResponse.self, from: data)
             }
             .receive(on: DispatchQueue.main)
-            .sink { completionStatus in
-                switch completionStatus {
-                case .finished:
-                    self.changeState(.finished)
-                    break
-                case .failure(let error):
-                    self.showingAlert.toggle()
-                    print("Network or decoding error: \(error.localizedDescription)")
+            .sink(receiveCompletion: { completionStatus in
+                if case .failure(let error) = completionStatus {
+                    self.showError = true
+                    self.errorMessage = "Failed to fetch rates: \(error.localizedDescription)"
                     completion(false)
                 }
-            } receiveValue: { [weak self] exchangeData in
+            }, receiveValue: { [weak self] exchangeData in
                 guard let self = self else { return }
                 self.exchangeRates = exchangeData.rates
                 self.exchangeRates[exchangeData.base] = 1.0
                 completion(true)
-            }
+            })
             .store(in: &cancellables)
     }
     
@@ -301,15 +283,6 @@ class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
-        formatter.usesGroupingSeparator = true
-        formatter.groupingSeparator = ","
-        formatter.decimalSeparator = "."
-
-        if let formattedString = formatter.string(from: NSNumber(value: convertedAmount)) {
-            return formattedString
-        } else {
-            return String(format: "%.2f", convertedAmount)
-        }
+        return formatter.string(from: NSNumber(value: convertedAmount)) ?? "0.00"
     }
 }

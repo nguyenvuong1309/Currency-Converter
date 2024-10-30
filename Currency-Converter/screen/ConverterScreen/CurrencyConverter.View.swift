@@ -1,4 +1,9 @@
-// ContentView.swift
+//
+//  CurrencyConverter.swift
+//  Currency Converter
+//
+//  Created by ducvuong on 27/10/24.
+//
 
 import SwiftUI
 
@@ -6,118 +11,102 @@ struct CurrencyConverter: View {
     @StateObject private var viewModel = CurrencyConverterViewModel()
     @EnvironmentObject var languageSettings: SettingsViewModel
     
-    @State private var isFromCurrencyPickerPresented = false
-    @State private var isToCurrencyPickerPresented = false
-    
     var body: some View {
-        baseView()
-    }
-
-    
-    @ViewBuilder
-    private func baseView() -> some View {
-        switch viewModel.states {
-        case .finished:
-            NavigationView {
-            Form {
-                // Input Amount Section
-                Section(header: Text("enter_amount".localised(using: languageSettings.selectedLanguage))) {
-                    TextField("amount".localised(using: languageSettings.selectedLanguage), text: $viewModel.inputAmount)
-                        .keyboardType(.decimalPad)
+        NavigationView {
+            switch viewModel.states {
+            case .finished:
+                currencyConversionForm()
+            case .loading:
+                ProgressView("Loading")
+            case .error(let error):
+                CustomStateView(image: "exclamationmark.transmission",
+                                description: "Something went wrong!",
+                                tintColor: .red)
+                .alert(isPresented: $viewModel.showError) {
+                    Alert(title: Text("Error"), message: Text(error), dismissButton: .default(Text("Ok"), action: {
+                        viewModel.changeStateToEmpty()
+                    }))
                 }
-
-                // Select Currencies Section
-                Section(header: Text("select_currencies".localised(using: languageSettings.selectedLanguage))) {
-                    HStack {
-                        Text("from".localised(using: languageSettings.selectedLanguage))
-                        Spacer()
-                        Button(action: {
-                            isFromCurrencyPickerPresented = true
-                        }) {
-                            Text("\(viewModel.currencyFlags[viewModel.fromCurrency] ?? "") \(viewModel.fromCurrency)")
-                                .foregroundColor(.blue)
-                        }
-                        .sheet(isPresented: $isFromCurrencyPickerPresented) {
-                            CurrencyPickerView(selectedCurrency: $viewModel.fromCurrency, currencies: viewModel.currencies, currencyFlags: viewModel.currencyFlags)
-                                .environmentObject(languageSettings)
-                        }
-                    }
-                    HStack {
-                        Text("to".localised(using: languageSettings.selectedLanguage))
-                        Spacer()
-                        Button(action: {
-                            isToCurrencyPickerPresented = true
-                        }) {
-                            Text("\(viewModel.currencyFlags[viewModel.toCurrency] ?? "") \(viewModel.toCurrency)")
-                                .foregroundColor(.blue)
-                        }
-                        .sheet(isPresented: $isToCurrencyPickerPresented) {
-                            CurrencyPickerView(selectedCurrency: $viewModel.toCurrency, currencies: viewModel.currencies, currencyFlags: viewModel.currencyFlags)
-                                .environmentObject(languageSettings)
-                        }
-                    }
-                }
-
-                // Result Section
-                Section(header: Text("result".localised(using: languageSettings.selectedLanguage))) {
-                    if viewModel.isLoading {
-                        ProgressView()
-                    } else {
-                        Text("\(viewModel.formattedConvertedAmount) \(viewModel.toCurrency)")
-                    }
-                }
-
-                // Settings Navigation
-                Section {
-                    NavigationLink(destination: SettingsView()) {
-                        Text("settings".localised(using: languageSettings.selectedLanguage))
-                    }
-                }
-            }
-            .navigationTitle("currency_convert".localised(using: languageSettings.selectedLanguage))
-            .toolbar {
-                Button("convert".localised(using: languageSettings.selectedLanguage)) {
-                    viewModel.convertCurrency()
-                }
-            }
-            .alert(isPresented: $viewModel.showError) {
-                Alert(
-                    title: Text("error".localised(using: languageSettings.selectedLanguage)),
-                    message: Text(viewModel.errorMessage),
-                    dismissButton: .default(Text("close".localised(using: languageSettings.selectedLanguage)))
-                )
+            case .ready:
+                ProgressView()
+                    .onAppear(perform: viewModel.initializeService)
+            case .empty:
+                CustomStateView(image: "newspaper", description: "There is no data :(", tintColor: .indigo)
             }
         }
         .preferredColorScheme(viewModel.isDarkMode ? .dark : .light)
-        case .loading:
-            ProgressView("Loading")
-        case .error(error: let error):
-            CustomStateView(image: "exclamationmark.transmission",
-                            description: "Something get wrong !",
-                            tintColor: .red)
-                .alert(isPresented: $viewModel.showingAlert) {
-                    Alert(title: Text("Error Message"),
-                          message: Text(error),
-                          dismissButton: Alert.Button.default(
-                            Text("Ok"), action: {
-                                viewModel.changeStateToEmpty()
-                            }
-                          ))
+        .alert(isPresented: $viewModel.showError) {
+            Alert(title: Text("Error"), message: Text(viewModel.errorMessage), dismissButton: .default(Text("Close")))
+        }
+    }
+    
+    // MARK: - Currency Conversion Form View
+    @ViewBuilder
+    private func currencyConversionForm() -> some View {
+        Form {
+            // Input Amount Section
+            Section(header: Text("Enter Amount".localised(using: languageSettings.selectedLanguage))) {
+                TextField("Amount".localised(using: languageSettings.selectedLanguage), text: $viewModel.inputAmount)
+                    .keyboardType(.decimalPad)
+            }
+            
+            // Select Currencies Section
+            currencySelectionSection()
+            
+            // Conversion Result Section
+            Section(header: Text("Result".localised(using: languageSettings.selectedLanguage))) {
+                if viewModel.isLoading {
+                    ProgressView()
+                } else {
+                    Text("\(viewModel.formattedConvertedAmount) \(viewModel.toCurrency)")
                 }
-        case .ready:
-            ProgressView()
-                .onAppear {
-                    viewModel.serviceInitialize()
+            }
+            
+            // Settings Navigation
+            Section {
+                NavigationLink(destination: SettingsView()) {
+                    Text("Settings".localised(using: languageSettings.selectedLanguage))
                 }
-        case .empty:
-            CustomStateView(image: "newspaper",
-                            description: "There is no data :(",
-                            tintColor: .indigo)
+            }
+        }
+        .navigationTitle("Currency Convert".localised(using: languageSettings.selectedLanguage))
+        .toolbar {
+            Button("Convert".localised(using: languageSettings.selectedLanguage)) {
+                viewModel.convertCurrency()
+            }
+        }
+    }
+    
+    // Currency Selection Section
+    private func currencySelectionSection() -> some View {
+        Section(header: Text("Select Currencies".localised(using: languageSettings.selectedLanguage))) {
+            HStack {
+                Text("From".localised(using: languageSettings.selectedLanguage))
+                Spacer()
+                currencyPicker(for: $viewModel.fromCurrency, presented: $viewModel.isFromCurrencyPickerPresented)
+            }
+            HStack {
+                Text("To".localised(using: languageSettings.selectedLanguage))
+                Spacer()
+                currencyPicker(for: $viewModel.toCurrency, presented: $viewModel.isToCurrencyPickerPresented)
+            }
+        }
+    }
+    
+    // Currency Picker Helper
+    private func currencyPicker(for currency: Binding<String>, presented: Binding<Bool>) -> some View {
+        Button(action: { presented.wrappedValue = true }) {
+            Text("\(viewModel.currencyFlags[currency.wrappedValue] ?? "") \(currency.wrappedValue)")
+                .foregroundColor(.blue)
+        }
+        .sheet(isPresented: presented) {
+            CurrencyPickerView(selectedCurrency: currency, currencies: viewModel.currencies, currencyFlags: viewModel.currencyFlags)
+                .environmentObject(languageSettings)
         }
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct CurrencyConverter_Previews: PreviewProvider {
     static var previews: some View {
         CurrencyConverter()
             .environmentObject(SettingsViewModel())
