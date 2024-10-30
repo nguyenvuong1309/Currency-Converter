@@ -1,27 +1,29 @@
+// ContentView.swift
+
 import SwiftUI
 
-struct CurrencyConverterView: View {
+struct CurrencyConverter: View {
     @StateObject private var viewModel = CurrencyConverterViewModel()
     @EnvironmentObject var languageSettings: SettingsViewModel
-
+    
     @State private var isFromCurrencyPickerPresented = false
     @State private var isToCurrencyPickerPresented = false
-
+    
     var body: some View {
-        NavigationView {
+        baseView()
+    }
+
+    
+    @ViewBuilder
+    private func baseView() -> some View {
+        switch viewModel.states {
+        case .finished:
+            NavigationView {
             Form {
                 // Input Amount Section
                 Section(header: Text("enter_amount".localised(using: languageSettings.selectedLanguage))) {
-                    VStack(alignment: .leading) {
-                        TextField("amount".localised(using: languageSettings.selectedLanguage), text: $viewModel.inputAmount)
-                            .keyboardType(.decimalPad)
-                        
-                        if let error = viewModel.inputAmountError {
-                            Text(error)
-                                .foregroundColor(.red)
-                                .font(.caption)
-                        }
-                    }
+                    TextField("amount".localised(using: languageSettings.selectedLanguage), text: $viewModel.inputAmount)
+                        .keyboardType(.decimalPad)
                 }
 
                 // Select Currencies Section
@@ -36,12 +38,8 @@ struct CurrencyConverterView: View {
                                 .foregroundColor(.blue)
                         }
                         .sheet(isPresented: $isFromCurrencyPickerPresented) {
-                            CurrencyPickerView(
-                                selectedCurrency: $viewModel.fromCurrency,
-                                currencies: viewModel.currencies,
-                                currencyFlags: viewModel.currencyFlags
-                            )
-                            .environmentObject(languageSettings)
+                            CurrencyPickerView(selectedCurrency: $viewModel.fromCurrency, currencies: viewModel.currencies, currencyFlags: viewModel.currencyFlags)
+                                .environmentObject(languageSettings)
                         }
                     }
                     HStack {
@@ -54,12 +52,8 @@ struct CurrencyConverterView: View {
                                 .foregroundColor(.blue)
                         }
                         .sheet(isPresented: $isToCurrencyPickerPresented) {
-                            CurrencyPickerView(
-                                selectedCurrency: $viewModel.toCurrency,
-                                currencies: viewModel.currencies,
-                                currencyFlags: viewModel.currencyFlags
-                            )
-                            .environmentObject(languageSettings)
+                            CurrencyPickerView(selectedCurrency: $viewModel.toCurrency, currencies: viewModel.currencies, currencyFlags: viewModel.currencyFlags)
+                                .environmentObject(languageSettings)
                         }
                     }
                 }
@@ -69,7 +63,7 @@ struct CurrencyConverterView: View {
                     if viewModel.isLoading {
                         ProgressView()
                     } else {
-                        Text("\(viewModel.formattedConvertedAmount)")
+                        Text("\(viewModel.formattedConvertedAmount) \(viewModel.toCurrency)")
                     }
                 }
 
@@ -93,17 +87,39 @@ struct CurrencyConverterView: View {
                     dismissButton: .default(Text("close".localised(using: languageSettings.selectedLanguage)))
                 )
             }
-            .preferredColorScheme(viewModel.isDarkMode ? .dark : .light)
         }
-        .onAppear {
-            viewModel.serviceInitialize()
+        .preferredColorScheme(viewModel.isDarkMode ? .dark : .light)
+        case .loading:
+            ProgressView("Loading")
+        case .error(error: let error):
+            CustomStateView(image: "exclamationmark.transmission",
+                            description: "Something get wrong !",
+                            tintColor: .red)
+                .alert(isPresented: $viewModel.showingAlert) {
+                    Alert(title: Text("Error Message"),
+                          message: Text(error),
+                          dismissButton: Alert.Button.default(
+                            Text("Ok"), action: {
+                                viewModel.changeStateToEmpty()
+                            }
+                          ))
+                }
+        case .ready:
+            ProgressView()
+                .onAppear {
+                    viewModel.serviceInitialize()
+                }
+        case .empty:
+            CustomStateView(image: "newspaper",
+                            description: "There is no data :(",
+                            tintColor: .indigo)
         }
     }
 }
 
-struct CurrencyConverterView_Previews: PreviewProvider {
+struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        CurrencyConverterView()
+        CurrencyConverter()
             .environmentObject(SettingsViewModel())
     }
 }

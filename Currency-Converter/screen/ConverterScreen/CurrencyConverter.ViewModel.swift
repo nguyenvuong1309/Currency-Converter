@@ -1,8 +1,11 @@
+// CurrencyViewModel.swift
+
 import Foundation
 import SwiftUI
+import Combine
 
-class CurrencyConverterViewModel: BaseViewModel<CurrencyConverterStates> {
-    // MARK: - Published Properties
+class CurrencyConverterViewModel:  BaseViewModel<CurrencyConverterStates> {
+    // Published properties to update the view
     @Published var inputAmount: String = ""
     @Published var fromCurrency: String = "EUR"
     @Published var toCurrency: String = "USD"
@@ -10,304 +13,303 @@ class CurrencyConverterViewModel: BaseViewModel<CurrencyConverterStates> {
     @Published var isLoading: Bool = false
     @Published var showError: Bool = false
     @Published var errorMessage: String = ""
-    @Published var inputAmountError: String? = nil
-    @Published var exchangeRates: [String: Double] = [:]
-    @Published var showingAlert: Bool = false
-
-    // MARK: - App Storage
+    
     @AppStorage("isDarkMode") var isDarkMode: Bool = false
     @AppStorage("selectedLanguage") var selectedLanguage: String = Locale.current.language.languageCode?.identifier ?? "en"
-
-     let currencies = ["AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD",
-         "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", "BSD", "BTC", "BTN", "BWP", "BYN", "BYR", "BZD", "CAD",
-         "CDF", "CHF", "CLF", "CLP", "CNY", "CNH", "COP", "CRC", "CUC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD",
-         "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GGP", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD",
-         "HNL", "HRK", "HTG", "HUF", "IDR", "ILS", "IMP", "INR", "IQD", "IRR", "ISK", "JEP", "JMD", "JOD", "JPY", "KES",
-         "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LTL", "LVL", "LYD",
-         "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN", "NAD", "NGN",
-         "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB",
-         "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "STD", "SVC", "SYP", "SZL",
-         "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "UYU", "UZS", "VEF", "VES",
-         "VND", "VUV", "WST", "XAF", "XAG", "XAU", "XCD", "XDR", "XOF", "XPF", "YER", "ZAR", "ZMK", "ZMW", "ZWL"]
-
-     let currencyFlags: [String: String] = [
-         "AED": "🇦🇪", // United Arab Emirates
-         "AFN": "🇦🇫", // Afghanistan
-         "ALL": "🇦🇱", // Albania
-         "AMD": "🇦🇲", // Armenia
-         "ANG": "🇳🇱", // Curaçao & Sint Maarten (Netherlands)
-         "AOA": "🇦🇴", // Angola
-         "ARS": "🇦🇷", // Argentina
-         "AUD": "🇦🇺", // Australia
-         "AWG": "🇦🇼", // Aruba
-         "AZN": "🇦🇿", // Azerbaijan
-         "BAM": "🇧🇦", // Bosnia & Herzegovina
-         "BBD": "🇧🇧", // Barbados
-         "BDT": "🇧🇩", // Bangladesh
-         "BGN": "🇧🇬", // Bulgaria
-         "BHD": "🇧🇭", // Bahrain
-         "BIF": "🇧🇮", // Burundi
-         "BMD": "🇧🇲", // Bermuda
-         "BND": "🇧🇳", // Brunei
-         "BOB": "🇧🇴", // Bolivia
-         "BRL": "🇧🇷", // Brazil
-         "BSD": "🇧🇸", // Bahamas
-         "BTC": "🟡",   // Bitcoin (No specific flag)
-         "BTN": "🇧🇹", // Bhutan
-         "BWP": "🇧🇼", // Botswana
-         "BYN": "🇧🇾", // Belarus
-         "BYR": "🇧🇾", // Belarus (Old)
-         "BZD": "🇧🇿", // Belize
-         "CAD": "🇨🇦", // Canada
-         "CDF": "🇨🇩", // Democratic Republic of the Congo
-         "CHF": "🇨🇭", // Switzerland
-         "CLF": "🇨🇱", // Chile (Unidad de Fomento)
-         "CLP": "🇨🇱", // Chile
-         "CNY": "🇨🇳", // China
-         "CNH": "🇨🇳", // China (Offshore)
-         "COP": "🇨🇴", // Colombia
-         "CRC": "🇨🇷", // Costa Rica
-         "CUC": "🇨🇺", // Cuba (Convertible Peso)
-         "CUP": "🇨🇺", // Cuba
-         "CVE": "🇨🇻", // Cape Verde
-         "CZK": "🇨🇿", // Czech Republic
-         "DJF": "🇩🇯", // Djibouti
-         "DKK": "🇩🇰", // Denmark
-         "DOP": "🇩🇴", // Dominican Republic
-         "DZD": "🇩🇿", // Algeria
-         "EGP": "🇪🇬", // Egypt
-         "ERN": "🇪🇷", // Eritrea
-         "ETB": "🇪🇹", // Ethiopia
-         "EUR": "🇪🇺", // Eurozone
-         "FJD": "🇫🇯", // Fiji
-         "FKP": "🇫🇰", // Falkland Islands
-         "GBP": "🇬🇧", // United Kingdom
-         "GEL": "🇬🇪", // Georgia
-         "GGP": "🇬🇬", // Guernsey
-         "GHS": "🇬🇭", // Ghana
-         "GIP": "🇬🇮", // Gibraltar
-         "GMD": "🇬🇲", // Gambia
-         "GNF": "🇬🇳", // Guinea
-         "GTQ": "🇬🇹", // Guatemala
-         "GYD": "🇬🇾", // Guyana
-         "HKD": "🇭🇰", // Hong Kong
-         "HNL": "🇭🇳", // Honduras
-         "HRK": "🇭🇷", // Croatia
-         "HTG": "🇭🇹", // Haiti
-         "HUF": "🇭🇺", // Hungary
-         "IDR": "🇮🇩", // Indonesia
-         "ILS": "🇮🇱", // Israel
-         "IMP": "🇮🇲", // Isle of Man
-         "INR": "🇮🇳", // India
-         "IQD": "🇮🇶", // Iraq
-         "IRR": "🇮🇷", // Iran
-         "ISK": "🇮🇸", // Iceland
-         "JEP": "🇯🇪", // Jersey
-         "JMD": "🇯🇲", // Jamaica
-         "JOD": "🇯🇴", // Jordan
-         "JPY": "🇯🇵", // Japan
-         "KES": "🇰🇪", // Kenya
-         "KGS": "🇰🇬", // Kyrgyzstan
-         "KHR": "🇰🇭", // Cambodia
-         "KMF": "🇰🇲", // Comoros
-         "KPW": "🇰🇵", // North Korea
-         "KRW": "🇰🇷", // South Korea
-         "KWD": "🇰🇼", // Kuwait
-         "KYD": "🇰🇾", // Cayman Islands
-         "KZT": "🇰🇿", // Kazakhstan
-         "LAK": "🇱🇦", // Laos
-         "LBP": "🇱🇧", // Lebanon
-         "LKR": "🇱🇰", // Sri Lanka
-         "LRD": "🇱🇷", // Liberia
-         "LSL": "🇱🇸", // Lesotho
-         "LTL": "🇱🇹", // Lithuania (Old)
-         "LVL": "🇱🇻", // Latvia (Old)
-         "LYD": "🇱🇾", // Libya
-         "MAD": "🇲🇦", // Morocco
-         "MDL": "🇲🇩", // Moldova
-         "MGA": "🇲🇬", // Madagascar
-         "MKD": "🇲🇰", // North Macedonia
-         "MMK": "🇲🇲", // Myanmar
-         "MNT": "🇲🇳", // Mongolia
-         "MOP": "🇲🇴", // Macau
-         "MRU": "🇲🇷", // Mauritania
-         "MUR": "🇲🇺", // Mauritius
-         "MVR": "🇲🇻", // Maldives
-         "MWK": "🇲🇼", // Malawi
-         "MXN": "🇲🇽", // Mexico
-         "MYR": "🇲🇾", // Malaysia
-         "MZN": "🇲🇿", // Mozambique
-         "NAD": "🇳🇦", // Namibia
-         "NGN": "🇳🇬", // Nigeria
-         "NIO": "🇳🇮", // Nicaragua
-         "NOK": "🇳🇴", // Norway
-         "NPR": "🇳🇵", // Nepal
-         "NZD": "🇳🇿", // New Zealand
-         "OMR": "🇴🇲", // Oman
-         "PAB": "🇵🇦", // Panama
-         "PEN": "🇵🇪", // Peru
-         "PGK": "🇵🇬", // Papua New Guinea
-         "PHP": "🇵🇭", // Philippines
-         "PKR": "🇵🇰", // Pakistan
-         "PLN": "🇵🇱", // Poland
-         "PYG": "🇵🇾", // Paraguay
-         "QAR": "🇶🇦", // Qatar
-         "RON": "🇷🇴", // Romania
-         "RSD": "🇷🇸", // Serbia
-         "RUB": "🇷🇺", // Russia
-         "RWF": "🇷🇼", // Rwanda
-         "SAR": "🇸🇦", // Saudi Arabia
-         "SBD": "🇸🇧", // Solomon Islands
-         "SCR": "🇸🇨", // Seychelles
-         "SDG": "🇸🇩", // Sudan
-         "SEK": "🇸🇪", // Sweden
-         "SGD": "🇸🇬", // Singapore
-         "SHP": "🇸🇭", // Saint Helena
-         "SLE": "🇸🇱", // Sierra Leone
-         "SLL": "🇸🇱", // Sierra Leone (Old)
-         "SOS": "🇸🇴", // Somalia
-         "SRD": "🇸🇷", // Suriname
-         "STD": "🇸🇹", // São Tomé & Príncipe (Old)
-         "SVC": "🇸🇻", // El Salvador
-         "SYP": "🇸🇾", // Syria
-         "SZL": "🇸🇿", // Eswatini
-         "THB": "🇹🇭", // Thailand
-         "TJS": "🇹🇯", // Tajikistan
-         "TMT": "🇹🇲", // Turkmenistan
-         "TND": "🇹🇳", // Tunisia
-         "TOP": "🇹🇴", // Tonga
-         "TRY": "🇹🇷", // Turkey
-         "TTD": "🇹🇹", // Trinidad & Tobago
-         "TWD": "🇹🇼", // Taiwan
-         "TZS": "🇹🇿", // Tanzania
-         "UAH": "🇺🇦", // Ukraine
-         "UGX": "🇺🇬", // Uganda
-         "USD": "🇺🇸", // United States
-         "UYU": "🇺🇾", // Uruguay
-         "UZS": "🇺🇿", // Uzbekistan
-         "VEF": "🇻🇪", // Venezuela (Old)
-         "VES": "🇻🇪", // Venezuela
-         "VND": "🇻🇳", // Vietnam
-         "VUV": "🇻🇺", // Vanuatu
-         "WST": "🇼🇸", // Samoa
-         "XAF": "🌍", // Central African CFA Franc (No specific emoji)
-         "XAG": "🟡", // Silver (Commodity)
-         "XAU": "🟡", // Gold (Commodity)
-         "XCD": "🇨🇩", // East Caribbean Dollar (Caribbean nations)
-         "XDR": "🌐", // Special Drawing Rights (No emoji)
-         "XOF": "🌍", // West African CFA Franc (No specific emoji)
-         "XPF": "🌐", // CFP Franc (No specific emoji)
-         "YER": "🇾🇪", // Yemen
-         "ZAR": "🇿🇦", // South Africa
-         "ZMK": "🇿🇲", // Zambia (Old)
-         "ZMW": "🇿🇲", // Zambia
-         "ZWL": "🇿🇼", // Zimbabwe
-     ]
-
-   
     
-    private let exchangeRatesAPIBaseURL = "https://api.exchangeratesapi.io/v1/latest?access_key=f36d7950db4e3ded0670571772b404ed"
-    private var lastFetchDate: Date?
+    @Published var exchangeRates: [String: Double] = [:]
 
-    // MARK: - Initialization
-    override init() {
-        super.init()
-        serviceInitialize()
-    }
+    var showingAlert: Bool = false
     
-    // MARK: - Service Initialization
+    
+    let currencies = ["AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", 
+    "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", "BSD", "BTC", "BTN", "BWP", "BYN", "BYR", "BZD", "CAD", 
+    "CDF", "CHF", "CLF", "CLP", "CNY", "CNH", "COP", "CRC", "CUC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", 
+    "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GGP", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", 
+    "HNL", "HRK", "HTG", "HUF", "IDR", "ILS", "IMP", "INR", "IQD", "IRR", "ISK", "JEP", "JMD", "JOD", "JPY", "KES", 
+    "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LTL", "LVL", "LYD", 
+    "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN", "NAD", "NGN", 
+    "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", 
+    "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "STD", "SVC", "SYP", "SZL", 
+    "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "UYU", "UZS", "VEF", "VES", 
+    "VND", "VUV", "WST", "XAF", "XAG", "XAU", "XCD", "XDR", "XOF", "XPF", "YER", "ZAR", "ZMK", "ZMW", "ZWL"]
+
+    let currencyFlags: [String: String] = [
+    "AED": "🇦🇪", // United Arab Emirates
+    "AFN": "🇦🇫", // Afghanistan
+    "ALL": "🇦🇱", // Albania
+    "AMD": "🇦🇲", // Armenia
+    "ANG": "🇳🇱", // Curaçao & Sint Maarten (Netherlands)
+    "AOA": "🇦🇴", // Angola
+    "ARS": "🇦🇷", // Argentina
+    "AUD": "🇦🇺", // Australia
+    "AWG": "🇦🇼", // Aruba
+    "AZN": "🇦🇿", // Azerbaijan
+    "BAM": "🇧🇦", // Bosnia & Herzegovina
+    "BBD": "🇧🇧", // Barbados
+    "BDT": "🇧🇩", // Bangladesh
+    "BGN": "🇧🇬", // Bulgaria
+    "BHD": "🇧🇭", // Bahrain
+    "BIF": "🇧🇮", // Burundi
+    "BMD": "🇧🇲", // Bermuda
+    "BND": "🇧🇳", // Brunei
+    "BOB": "🇧🇴", // Bolivia
+    "BRL": "🇧🇷", // Brazil
+    "BSD": "🇧🇸", // Bahamas
+    "BTC": "🟡",   // Bitcoin (No specific flag)
+    "BTN": "🇧🇹", // Bhutan
+    "BWP": "🇧🇼", // Botswana
+    "BYN": "🇧🇾", // Belarus
+    "BYR": "🇧🇾", // Belarus (Old)
+    "BZD": "🇧🇿", // Belize
+    "CAD": "🇨🇦", // Canada
+    "CDF": "🇨🇩", // Democratic Republic of the Congo
+    "CHF": "🇨🇭", // Switzerland
+    "CLF": "🇨🇱", // Chile (Unidad de Fomento)
+    "CLP": "🇨🇱", // Chile
+    "CNY": "🇨🇳", // China
+    "CNH": "🇨🇳", // China (Offshore)
+    "COP": "🇨🇴", // Colombia
+    "CRC": "🇨🇷", // Costa Rica
+    "CUC": "🇨🇺", // Cuba (Convertible Peso)
+    "CUP": "🇨🇺", // Cuba
+    "CVE": "🇨🇻", // Cape Verde
+    "CZK": "🇨🇿", // Czech Republic
+    "DJF": "🇩🇯", // Djibouti
+    "DKK": "🇩🇰", // Denmark
+    "DOP": "🇩🇴", // Dominican Republic
+    "DZD": "🇩🇿", // Algeria
+    "EGP": "🇪🇬", // Egypt
+    "ERN": "🇪🇷", // Eritrea
+    "ETB": "🇪🇹", // Ethiopia
+    "EUR": "🇪🇺", // Eurozone
+    "FJD": "🇫🇯", // Fiji
+    "FKP": "🇫🇰", // Falkland Islands
+    "GBP": "🇬🇧", // United Kingdom
+    "GEL": "🇬🇪", // Georgia
+    "GGP": "🇬🇬", // Guernsey
+    "GHS": "🇬🇭", // Ghana
+    "GIP": "🇬🇮", // Gibraltar
+    "GMD": "🇬🇲", // Gambia
+    "GNF": "🇬🇳", // Guinea
+    "GTQ": "🇬🇹", // Guatemala
+    "GYD": "🇬🇾", // Guyana
+    "HKD": "🇭🇰", // Hong Kong
+    "HNL": "🇭🇳", // Honduras
+    "HRK": "🇭🇷", // Croatia
+    "HTG": "🇭🇹", // Haiti
+    "HUF": "🇭🇺", // Hungary
+    "IDR": "🇮🇩", // Indonesia
+    "ILS": "🇮🇱", // Israel
+    "IMP": "🇮🇲", // Isle of Man
+    "INR": "🇮🇳", // India
+    "IQD": "🇮🇶", // Iraq
+    "IRR": "🇮🇷", // Iran
+    "ISK": "🇮🇸", // Iceland
+    "JEP": "🇯🇪", // Jersey
+    "JMD": "🇯🇲", // Jamaica
+    "JOD": "🇯🇴", // Jordan
+    "JPY": "🇯🇵", // Japan
+    "KES": "🇰🇪", // Kenya
+    "KGS": "🇰🇬", // Kyrgyzstan
+    "KHR": "🇰🇭", // Cambodia
+    "KMF": "🇰🇲", // Comoros
+    "KPW": "🇰🇵", // North Korea
+    "KRW": "🇰🇷", // South Korea
+    "KWD": "🇰🇼", // Kuwait
+    "KYD": "🇰🇾", // Cayman Islands
+    "KZT": "🇰🇿", // Kazakhstan
+    "LAK": "🇱🇦", // Laos
+    "LBP": "🇱🇧", // Lebanon
+    "LKR": "🇱🇰", // Sri Lanka
+    "LRD": "🇱🇷", // Liberia
+    "LSL": "🇱🇸", // Lesotho
+    "LTL": "🇱🇹", // Lithuania (Old)
+    "LVL": "🇱🇻", // Latvia (Old)
+    "LYD": "🇱🇾", // Libya
+    "MAD": "🇲🇦", // Morocco
+    "MDL": "🇲🇩", // Moldova
+    "MGA": "🇲🇬", // Madagascar
+    "MKD": "🇲🇰", // North Macedonia
+    "MMK": "🇲🇲", // Myanmar
+    "MNT": "🇲🇳", // Mongolia
+    "MOP": "🇲🇴", // Macau
+    "MRU": "🇲🇷", // Mauritania
+    "MUR": "🇲🇺", // Mauritius
+    "MVR": "🇲🇻", // Maldives
+    "MWK": "🇲🇼", // Malawi
+    "MXN": "🇲🇽", // Mexico
+    "MYR": "🇲🇾", // Malaysia
+    "MZN": "🇲🇿", // Mozambique
+    "NAD": "🇳🇦", // Namibia
+    "NGN": "🇳🇬", // Nigeria
+    "NIO": "🇳🇮", // Nicaragua
+    "NOK": "🇳🇴", // Norway
+    "NPR": "🇳🇵", // Nepal
+    "NZD": "🇳🇿", // New Zealand
+    "OMR": "🇴🇲", // Oman
+    "PAB": "🇵🇦", // Panama
+    "PEN": "🇵🇪", // Peru
+    "PGK": "🇵🇬", // Papua New Guinea
+    "PHP": "🇵🇭", // Philippines
+    "PKR": "🇵🇰", // Pakistan
+    "PLN": "🇵🇱", // Poland
+    "PYG": "🇵🇾", // Paraguay
+    "QAR": "🇶🇦", // Qatar
+    "RON": "🇷🇴", // Romania
+    "RSD": "🇷🇸", // Serbia
+    "RUB": "🇷🇺", // Russia
+    "RWF": "🇷🇼", // Rwanda
+    "SAR": "🇸🇦", // Saudi Arabia
+    "SBD": "🇸🇧", // Solomon Islands
+    "SCR": "🇸🇨", // Seychelles
+    "SDG": "🇸🇩", // Sudan
+    "SEK": "🇸🇪", // Sweden
+    "SGD": "🇸🇬", // Singapore
+    "SHP": "🇸🇭", // Saint Helena
+    "SLE": "🇸🇱", // Sierra Leone
+    "SLL": "🇸🇱", // Sierra Leone (Old)
+    "SOS": "🇸🇴", // Somalia
+    "SRD": "🇸🇷", // Suriname
+    "STD": "🇸🇹", // São Tomé & Príncipe (Old)
+    "SVC": "🇸🇻", // El Salvador
+    "SYP": "🇸🇾", // Syria
+    "SZL": "🇸🇿", // Eswatini
+    "THB": "🇹🇭", // Thailand
+    "TJS": "🇹🇯", // Tajikistan
+    "TMT": "🇹🇲", // Turkmenistan
+    "TND": "🇹🇳", // Tunisia
+    "TOP": "🇹🇴", // Tonga
+    "TRY": "🇹🇷", // Turkey
+    "TTD": "🇹🇹", // Trinidad & Tobago
+    "TWD": "🇹🇼", // Taiwan
+    "TZS": "🇹🇿", // Tanzania
+    "UAH": "🇺🇦", // Ukraine
+    "UGX": "🇺🇬", // Uganda
+    "USD": "🇺🇸", // United States
+    "UYU": "🇺🇾", // Uruguay
+    "UZS": "🇺🇿", // Uzbekistan
+    "VEF": "🇻🇪", // Venezuela (Old)
+    "VES": "🇻🇪", // Venezuela
+    "VND": "🇻🇳", // Vietnam
+    "VUV": "🇻🇺", // Vanuatu
+    "WST": "🇼🇸", // Samoa
+    "XAF": "🌍", // Central African CFA Franc (No specific emoji)
+    "XAG": "🟡", // Silver (Commodity)
+    "XAU": "🟡", // Gold (Commodity)
+    "XCD": "🇨🇩", // East Caribbean Dollar (Caribbean nations)
+    "XDR": "🌐", // Special Drawing Rights (No emoji)
+    "XOF": "🌍", // West African CFA Franc (No specific emoji)
+    "XPF": "🌐", // CFP Franc (No specific emoji)
+    "YER": "🇾🇪", // Yemen
+    "ZAR": "🇿🇦", // South Africa
+    "ZMK": "🇿🇲", // Zambia (Old)
+    "ZMW": "🇿🇲", // Zambia
+    "ZWL": "🇿🇼", // Zimbabwe
+]
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+//    init() {
+//        // Optionally, fetch exchange rates on initialization
+//        // fetchExchangeRates()
+//    }
+
     func serviceInitialize() {
-        isLoading = true
-        Task {
-            let success = await fetchExchangeRates()
-            isLoading = false
-            changeState(.finished)
-            if !success {
-                errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
-                showError = true
-            }
-        }
-    }
-
-    // MARK: - Currency Conversion
-    func convertCurrency() {
-        inputAmountError = nil
-
-        guard let amount = Double(inputAmount), amount > 0 else {
-            inputAmountError = NSLocalizedString("invalid_amount", comment: "")
-            return
-        }
-
-        Task {
-            if exchangeRates.isEmpty || shouldFetchNewExchangeRates() {
-                isLoading = true
-                let success = await fetchExchangeRates()
-                isLoading = false
-                if success {
-                    calculateConvertedAmount(amount: amount)
+        fetchExchangeRates { [weak self] success in
+            guard let self = self else { return }
+            self.isLoading = false
+            self.changeState(.finished)
+            if success {
+                if let fromRate = self.exchangeRates[self.fromCurrency], let toRate = self.exchangeRates[self.toCurrency] {
                 } else {
-                    errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
-                    showError = true
+                    self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
+                    self.showError = true
                 }
             } else {
-                calculateConvertedAmount(amount: amount)
+                self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
+                self.showError = true
             }
         }
     }
 
-    private func calculateConvertedAmount(amount: Double) {
-        guard
-            let fromRate = exchangeRates[fromCurrency],
-            let toRate = exchangeRates[toCurrency]
-        else {
-            errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
+    func changeStateToEmpty() {
+        changeState(.empty)
+    }
+    
+    // Function to perform currency conversion
+    func convertCurrency() {
+        guard let amount = Double(inputAmount), amount > 0 else {
+            errorMessage = NSLocalizedString("invalid_amount", comment: "")
             showError = true
             return
         }
-        let baseAmount = amount / fromRate
-        convertedAmount = baseAmount * toRate
-    }
-
-    // MARK: - Fetch Exchange Rates
-    @MainActor
-    private func fetchExchangeRates() async -> Bool {
-        guard let url = URL(string: "\(exchangeRatesAPIBaseURL)") else {
-            return false
-        }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let exchangeData = try JSONDecoder().decode(ExchangeRatesResponse.self, from: data)
-            exchangeRates = exchangeData.rates
-            exchangeRates[exchangeData.base] = 1.0
-            lastFetchDate = Date()
-            return true
-        } catch {
-            print("Error fetching exchange rates: \(error.localizedDescription)")
-            return false
+        isLoading = true
+        fetchExchangeRates { [weak self] success in
+            guard let self = self else { return }
+            self.isLoading = false
+            if success {
+                if let fromRate = self.exchangeRates[self.fromCurrency], let toRate = self.exchangeRates[self.toCurrency] {
+                    let baseAmount = amount / fromRate
+                    self.convertedAmount = baseAmount * toRate
+                } else {
+                    self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
+                    self.showError = true
+                }
+            } else {
+                self.errorMessage = NSLocalizedString("cannot_fetch_exchange_rates", comment: "")
+                self.showError = true
+            }
         }
     }
+    
+    // Function to fetch exchange rates from the API
+    func fetchExchangeRates(completion: @escaping (Bool) -> Void) {
+        let urlString = "https://api.exchangeratesapi.io/v1/latest?access_key=f36d7950db4e3ded0670571772b404ed"
+        guard let url = URL(string: urlString) else {
+            completion(false)
+            return
+        }
 
-    private func shouldFetchNewExchangeRates() -> Bool {
-        guard let lastFetch = lastFetchDate else { return true }
-        // Update rates if more than 1 hour has passed
-        return Date().timeIntervalSince(lastFetch) > 3600
+        URLSession.shared.dataTaskPublisher(for: url)
+            .tryMap { data, response -> ExchangeRatesResponse in
+                let decoder = JSONDecoder()
+                return try decoder.decode(ExchangeRatesResponse.self, from: data)
+            }
+            .receive(on: DispatchQueue.main)
+            .sink { completionStatus in
+                switch completionStatus {
+                case .finished:
+                    self.changeState(.finished)
+                    break
+                case .failure(let error):
+                    self.showingAlert.toggle()
+                    print("Network or decoding error: \(error.localizedDescription)")
+                    completion(false)
+                }
+            } receiveValue: { [weak self] exchangeData in
+                guard let self = self else { return }
+                self.exchangeRates = exchangeData.rates
+                self.exchangeRates[exchangeData.base] = 1.0
+                completion(true)
+            }
+            .store(in: &cancellables)
     }
-
+    
+    // Helper to format the converted amount
     var formattedConvertedAmount: String {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .currency
-    formatter.currencyCode = toCurrency
-    formatter.maximumFractionDigits = 2
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 2
+        formatter.usesGroupingSeparator = true
+        formatter.groupingSeparator = ","
+        formatter.decimalSeparator = "."
 
-    // Set the locale based on the toCurrency
-    switch toCurrency {
-    case "VND":
-        formatter.locale = Locale(identifier: "vi_VN")
-    default:
-        formatter.locale = Locale.current
+        if let formattedString = formatter.string(from: NSNumber(value: convertedAmount)) {
+            return formattedString
+        } else {
+            return String(format: "%.2f", convertedAmount)
+        }
     }
-
-    return formatter.string(from: NSNumber(value: convertedAmount)) ?? "\(convertedAmount)"
-}
 }

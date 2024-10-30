@@ -1,5 +1,7 @@
 # Finding the Missing Number in an Array
 
+
+
 This README provides an overview of various algorithms to efficiently find a missing number in an array containing integers from **1** to **n + 1** with exactly one number missing. It covers three primary methods: Summation, XOR, and Sorting. Each method is explained in detail with corresponding code examples in Python.
 
 ## Table of Contents
@@ -36,16 +38,13 @@ Calculate the expected sum of numbers from 1 to n + 1 using the arithmetic serie
 ##### Steps:
 
 1. Calculate the theoretical sum using the formula:
-   $$
-   \text{Sum}_{\text{theoretical}} = \frac{(n+1)(n+2)}{2}
-   $$
+      ![image](https://github.com/user-attachments/assets/a44916d7-8444-4d95-8e9c-cc9fcddb7e13)
+
 2. Compute the actual sum of all elements in the array.
 
 3. Find the missing number by subtracting the actual sum from the theoretical sum:
-   $$
-   \text{Missing Number} = \text{Sum}_{\text{theoretical}} - \text{Sum}_{\text{actual}}
-   $$
 
+      ![image](https://github.com/user-attachments/assets/69d4dad3-c48f-4e1b-b90b-5ad7b5d4cd74)
 ##### Complexity:
 
 - Time: `O(n)` – Iterates through the array once to compute the sum.
