@@ -1,8 +1,8 @@
 //
 //  Currency_ConverterUITests.swift
-//  Currency ConverterUITests
+//  Currency-ConverterUITests
 //
-//  Created by ducvuong on 27/10/24.
+//  Created by ducvuong on 29/10/24.
 //
 
 import XCTest
