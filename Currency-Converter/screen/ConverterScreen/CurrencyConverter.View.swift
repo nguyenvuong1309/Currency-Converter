@@ -46,8 +46,19 @@ struct CurrencyConverter: View {
         Form {
             // Input Amount Section
             Section(header: Text("Enter Amount".localised(using: languageSettings.selectedLanguage))) {
-                TextField("Amount".localised(using: languageSettings.selectedLanguage), text: $viewModel.inputAmount)
-                    .keyboardType(.decimalPad)
+                VStack(alignment: .leading, spacing: 5) {
+                    TextField("Amount".localised(using: languageSettings.selectedLanguage), text: $viewModel.inputAmount)
+                        .keyboardType(.decimalPad)
+                        .padding(.vertical, 5)
+                    
+                    // Display error message if input is invalid
+                    if !viewModel.isInputValid {
+                        Text("Invalid amount entered".localised(using: languageSettings.selectedLanguage))
+                            .foregroundColor(.red)
+                            .font(.caption)
+                            .transition(.opacity)
+                    }
+                }
             }
             
             // Select Currencies Section
@@ -74,6 +85,7 @@ struct CurrencyConverter: View {
             Button("Convert".localised(using: languageSettings.selectedLanguage)) {
                 viewModel.convertCurrency()
             }
+            .disabled(!viewModel.isInputValid) // Disable button if input is invalid
         }
     }
     

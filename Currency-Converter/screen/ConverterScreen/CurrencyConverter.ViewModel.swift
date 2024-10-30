@@ -4,7 +4,7 @@ import SwiftUI
 
 class CurrencyConverterViewModel: BaseViewModel<CurrencyConverterStates> {
     // Published properties
-    @Published var inputAmount: String = ""
+//    @Published var inputAmount: String = ""
     @Published var fromCurrency: String = "EUR"
     @Published var toCurrency: String = "USD"
     @Published var convertedAmount: Double = 0.0
@@ -13,6 +13,12 @@ class CurrencyConverterViewModel: BaseViewModel<CurrencyConverterStates> {
     @Published var errorMessage: String = ""
     @Published var isFromCurrencyPickerPresented: Bool = false
     @Published var isToCurrencyPickerPresented: Bool = false
+    @Published var inputAmount: String = "" {
+        didSet {
+            validateInputAmount()
+        }
+    }
+    @Published var isInputValid: Bool = true
     
     @AppStorage("isDarkMode") var isDarkMode: Bool = false
     @AppStorage("selectedLanguage") var selectedLanguage: String = Locale.current.language.languageCode?.identifier ?? "en"
@@ -210,6 +216,16 @@ class CurrencyConverterViewModel: BaseViewModel<CurrencyConverterStates> {
     "ZMW": "🇿🇲", // Zambia
     "ZWL": "🇿🇼", // Zimbabwe
 ]
+
+    // Input validation method
+    func validateInputAmount() {
+        if let _ = Double(inputAmount), !inputAmount.isEmpty {
+            isInputValid = true
+        } else {
+            isInputValid = false
+        }
+    }
+
     // Initialize the service and fetch exchange rates
     func initializeService() {
         fetchExchangeRates { [weak self] success in
